@@ -1,0 +1,73 @@
+/*----------------------------------------------------------
+* COSC363  Ray Tracer
+*
+*  The Plane class
+*  This is a subclass of Object, and hence implements the
+*  methods intersect() and normal().
+-------------------------------------------------------------*/
+
+#include "Plane.h"
+#include <math.h>
+
+
+/**
+* Checks if a point pt is inside the current polygon
+* Implement a point inclusion test using
+* member variables a, b, c, d.
+*/
+bool Plane::isInside(glm::vec3 pt)
+{
+
+    //=== Complete this function ====
+    glm::vec3 ua=b-a;
+    glm::vec3 ub=c-b;
+    glm::vec3 uc=d-c;
+    glm::vec3 ud=a-d;
+    
+    glm::vec3 va=p-a;
+    glm::vec3 vb=p-b;
+    glm::vec3 vc=p-c;
+    glm::vec3 vd=p-d;
+    
+	
+    return glm::cross(ua,va)>0 && 
+    glm::cross(ub,vb)>0 && 
+    glm::cross(uc,vc)>0 && 
+    glm::cross(ud,vd)>0;
+}
+
+/**
+* Plane's intersection method.  The input is a ray (pos, dir).
+*/
+float Plane::intersect(glm::vec3 posn, glm::vec3 dir)
+{
+    glm::vec3 n = normal(posn);
+    glm::vec3 vdif = a - posn;
+    float vdotn = glm::dot(dir, n);
+    if(fabs(vdotn) < 1.e-4) return -1;
+    float t = glm::dot(vdif, n) / vdotn;
+    if(fabs(t) < 0.0001) return -1;
+    glm::vec3 q = posn + dir * t;
+    if(isInside(q)) return t;
+    else return -1;
+}
+
+/**
+* Returns the unit normal vector at a given point.
+* Compute the plane's normal vector using
+* member variables a, b, c, d.
+* The parameter pt is a dummy variable and is not used.
+*/
+glm::vec3 Plane::normal(glm::vec3 pt)
+{
+    glm::vec3 n = glm::vec3(0);
+    //=== Complete this function ====
+    glm::vec3 ba = b - a;
+    glm::vec3 da = d - a;
+    glm::vec3 tempN = glm::cross(ba, da);
+    n = glm::normalize(tempN);
+    return n;
+}
+
+
+
