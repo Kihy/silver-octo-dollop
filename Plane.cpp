@@ -24,16 +24,16 @@ bool Plane::isInside(glm::vec3 pt)
     glm::vec3 uc=d-c;
     glm::vec3 ud=a-d;
     
-    glm::vec3 va=p-a;
-    glm::vec3 vb=p-b;
-    glm::vec3 vc=p-c;
-    glm::vec3 vd=p-d;
+    glm::vec3 va=pt-a;
+    glm::vec3 vb=pt-b;
+    glm::vec3 vc=pt-c;
+    glm::vec3 vd=pt-d;
     
-	
-    return glm::cross(ua,va)>0 && 
-    glm::cross(ub,vb)>0 && 
-    glm::cross(uc,vc)>0 && 
-    glm::cross(ud,vd)>0;
+	glm::vec3 normal=Plane::normal(ua);
+    return glm::dot(glm::cross(ua,va),normal)>0 &&
+    glm::dot(glm::cross(ub,vb),normal)>0 &&
+    glm::dot(glm::cross(uc,vc),normal)>0 &&
+    glm::dot(glm::cross(ud,vd),normal)>0 ;
 }
 
 /**
