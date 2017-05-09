@@ -13,6 +13,7 @@
 #include "Ray.h"
 #include <GL/glut.h>
 #include "Plane.h"
+#include "Cylinder.h"
 using namespace std;
 
 const float WIDTH = 20.0;
@@ -149,7 +150,7 @@ glm::vec3 trace(Ray ray, int step)
         glClearColor(0, 0, 0, 1);
 
         //-- Create a pointer to a sphere object
-        Sphere *sphere1 = new Sphere(glm::vec3(-5.0, -5.0, -90.0), 15.0, glm::vec3(0, 0, 1));
+        Sphere *sphere1 = new Sphere(glm::vec3(-0.0, -0.0, -100.0), 5.0, glm::vec3(0, 0, 1));
 
         //--Add the above to the list of scene objects.
         sceneObjects.push_back(sphere1);
@@ -161,10 +162,10 @@ glm::vec3 trace(Ray ray, int step)
         sceneObjects.push_back(sphere2);
 
         //-- Create a pointer to a sphere object
-        Sphere *sphere3 = new Sphere(glm::vec3(6.0, -12.0, -70.0), 5.0, glm::vec3(0, 1, 0));
+        Cylinder *cylinder = new Cylinder(glm::vec3(-5, -20, -80.0), 5.0,10.0, glm::vec3(0, 1, 0));
 
         //--Add the above to the list of scene objects.
-        sceneObjects.push_back(sphere3);
+        sceneObjects.push_back(cylinder);
         
         //--Add Plane 
 		Plane *plane = new Plane(glm::vec3(-20., -20, -40),//Point A
