@@ -62,13 +62,13 @@ glm::vec3 trace(Ray ray, int step)
 
     //specular reflections
     glm::vec3 reflVector = glm::reflect(-lightVector, normalVector);
-    float rDotn = glm::dot(reflVector, normalVector);
+    float rDotv = glm::dot(reflVector, -ray.dir);
 
     //make rDotn at least 0
-    rDotn = max(rDotn, 0.0f);
+    rDotv = max(rDotv, 0.0f);
 
     glm::vec3 v1(1);
-    rDotn = pow(rDotn, PHONGS_CONSTANT);
+    rDotv = pow(rDotv, PHONGS_CONSTANT);
 
     if(shadow.xindex > -1 || lDotn < 0)
     {
@@ -76,7 +76,7 @@ glm::vec3 trace(Ray ray, int step)
     }
     else
     {
-        colorSum = ambientCol * col + lDotn * col + rDotn * v1;
+        colorSum = ambientCol * col + lDotn * col + rDotv * v1;
     }
 
     if(ray.xindex == 0 && step < MAX_STEPS)
@@ -162,7 +162,7 @@ glm::vec3 trace(Ray ray, int step)
         sceneObjects.push_back(sphere2);
 
         //-- Create a pointer to a sphere object
-        Cylinder *cylinder = new Cylinder(glm::vec3(-5, -20, -80.0), 5.0,10.0, glm::vec3(0, 1, 0));
+        Cylinder *cylinder = new Cylinder(glm::vec3(-10, -20, -90.0), 5.0,10.0, glm::vec3(0, 1, 0));
 
         //--Add the above to the list of scene objects.
         sceneObjects.push_back(cylinder);
