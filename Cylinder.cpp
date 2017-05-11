@@ -34,6 +34,8 @@ float Cylinder::intersect(glm::vec3 posn, glm::vec3 dir)
     if ((r >= center.y) && (r <= center.y + height)) return t;
     else return -1;
     
+    
+    
 }
 
 /**

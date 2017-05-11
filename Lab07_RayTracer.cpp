@@ -26,7 +26,7 @@ const float XMIN = -WIDTH * 0.5;
 const float XMAX =  WIDTH * 0.5;
 const float YMIN = -HEIGHT * 0.5;
 const float YMAX =  HEIGHT * 0.5;
-const float PHONGS_CONSTANT = 10;
+const float PHONGS_CONSTANT = 20;
 
 vector<SceneObject*> sceneObjects;  //A global list containing pointers to objects in the scene
 
@@ -51,6 +51,7 @@ glm::vec3 trace(Ray ray, int step)
 		return background;
 		};      //If there is no intersection return background colour
 
+
     //shadows
     glm::vec3 normalVector = sceneObjects[ray.xindex]->normal(ray.xpt); //normal at point of intersection
     glm::vec3 lightVector = glm::normalize(light - ray.xpt); //normalized light vector
@@ -62,9 +63,18 @@ glm::vec3 trace(Ray ray, int step)
 
     float lDotn = glm::dot(lightVector, normalVector); //dot product
 
-    glm::vec3 col = sceneObjects[ray.xindex]->getColor(); //else return object's colour
+    glm::vec3 col;
 
-
+	if(ray.xindex==3){
+		
+		float texcoords=(ray.xpt.x+50)/100;
+		float texcoordt=(ray.xpt.y+50)/100;
+		
+		col=texture.getColorAt(texcoords,texcoordt);
+		}
+	else{
+		col = sceneObjects[ray.xindex]->getColor(); //else return object's colour
+		}
 
     //specular reflections
     glm::vec3 reflVector = glm::reflect(-lightVector, normalVector);
@@ -142,6 +152,40 @@ glm::vec3 trace(Ray ray, int step)
         glFlush();
     }
 
+//--draws a box with location x,y,x and size width, height,depth
+void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
+	    //--Add box    
+	    glm::vec3 A(x,y+h,z);
+	    glm::vec3 B(x,y,z);
+	    glm::vec3 C(x+w,y,z);
+	    glm::vec3 D(x+w,y+h,z);
+	    
+	    glm::vec3 E(x,y+h,z+d);
+	    glm::vec3 F(x,y,z+d);
+	    glm::vec3 G(x+w,y,z+d);
+	    glm::vec3 H(x+w,y+h,z+d);
+	    
+		Plane *front = new Plane(A,B,C,D,color);
+        sceneObjects.push_back(front);
+        
+        Plane *left = new Plane(A,E,F,B,color);
+        sceneObjects.push_back(left);
+        
+        Plane *back = new Plane(F,G,H,E,color);
+        sceneObjects.push_back(back);
+        
+        Plane *right = new Plane(D,H,G,C,color);
+        sceneObjects.push_back(right);
+        
+        Plane *top = new Plane(E,H,D,A,color);
+        sceneObjects.push_back(top);
+        
+        Plane *bottom = new Plane(B,C,G,F,color);
+        sceneObjects.push_back(bottom);
+        
+        
+	
+	}
 
 //---This function initializes the scene -------------------------------------------
 //   Specifically, it creates scene objects (spheres, planes, cones, cylinders etc)
@@ -171,19 +215,32 @@ glm::vec3 trace(Ray ray, int step)
         sceneObjects.push_back(sphere2);
 
         //-- Create a pointer to a sphere object
-        Cylinder *cylinder = new Cylinder(glm::vec3(-10, -20, -90.0), 5.0,10.0, glm::vec3(0, 1, 0));
+        Cylinder *cylinder = new Cylinder(glm::vec3(10, -20, -90.0), 5.0,10.0, glm::vec3(0, 1, 0));
 
         //--Add the above to the list of scene objects.
         sceneObjects.push_back(cylinder);
         
-        //--Add Plane 
-		Plane *plane = new Plane(glm::vec3(-20., -20, -200),//Point A
-        glm::vec3(20., -20, -200),//Point B
-        glm::vec3(20., 20, -200),//Point C
-        glm::vec3(-20., 20, -200),//Point D
+
+        
+        //--Add background plane xindex=3
+		Plane *backplane = new Plane(glm::vec3(-50., -50, -200),//Point A
+        glm::vec3(50., -50, -200),//Point B
+        glm::vec3(50., 50, -200),//Point C
+        glm::vec3(-50., 50, -200),//Point D
         glm::vec3(0.5, 0.5, 0));//Colour
         
-        sceneObjects.push_back(plane);
+        sceneObjects.push_back(backplane);
+        
+        //--Add floor
+        Plane *floor = new Plane(glm::vec3(-50., -20, -40),//Point A
+        glm::vec3(50., -20, -40),//Point B
+        glm::vec3(50., -20, -180),//Point C
+        glm::vec3(-50., -20, -180),//Point D
+        glm::vec3(1));//Colour
+        
+        sceneObjects.push_back(floor);
+        
+        drawBox(-20,-20,-120,5,5,5,glm::vec3(1));
 
     }
 
