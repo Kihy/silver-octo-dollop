@@ -14,6 +14,7 @@
 #include <GL/glut.h>
 #include "Plane.h"
 #include "Cylinder.h"
+#include "TextureBMP.h"
 using namespace std;
 
 const float WIDTH = 20.0;
@@ -29,6 +30,7 @@ const float PHONGS_CONSTANT = 10;
 
 vector<SceneObject*> sceneObjects;  //A global list containing pointers to objects in the scene
 
+TextureBMP texture;
 
 //---The most important function in a ray tracer! ----------------------------------
 //   Computes the colour value obtained by tracing a ray and finding its
@@ -36,14 +38,18 @@ vector<SceneObject*> sceneObjects;  //A global list containing pointers to objec
 //----------------------------------------------------------------------------------
 glm::vec3 trace(Ray ray, int step)
 {
-    glm::vec3 backgroundCol(0);
+	glm::vec3 background(0);
     glm::vec3 ambientCol(0.2);
     glm::vec3 light(10, 40, -3);
     glm::vec3 colorSum;
 
     ray.closestPt(sceneObjects);		//Compute the closest point of intersetion of objects with the ray
 
-    if(ray.xindex == -1) return backgroundCol;      //If there is no intersection return background colour
+    if(ray.xindex == -1) {
+		//float texcoords=(ray.xpt.x)/1024.0f;
+		//float texcoordt=(ray.xpt.y)/768.0f;
+		return background;
+		};      //If there is no intersection return background colour
 
     //shadows
     glm::vec3 normalVector = sceneObjects[ray.xindex]->normal(ray.xpt); //normal at point of intersection
@@ -149,6 +155,9 @@ glm::vec3 trace(Ray ray, int step)
         gluOrtho2D(XMIN, XMAX, YMIN, YMAX);
         glClearColor(0, 0, 0, 1);
 
+		//--create texture
+		texture=TextureBMP("background.bmp");
+
         //-- Create a pointer to a sphere object
         Sphere *sphere1 = new Sphere(glm::vec3(-0.0, -0.0, -100.0), 5.0, glm::vec3(0, 0, 1));
 
@@ -168,10 +177,10 @@ glm::vec3 trace(Ray ray, int step)
         sceneObjects.push_back(cylinder);
         
         //--Add Plane 
-		Plane *plane = new Plane(glm::vec3(-20., -20, -40),//Point A
-        glm::vec3(20., -20, -40),//Point B
-        glm::vec3(20., -20, -200),//Point C
-        glm::vec3(-20., -20, -200),//Point D
+		Plane *plane = new Plane(glm::vec3(-20., -20, -200),//Point A
+        glm::vec3(20., -20, -200),//Point B
+        glm::vec3(20., 20, -200),//Point C
+        glm::vec3(-20., 20, -200),//Point D
         glm::vec3(0.5, 0.5, 0));//Colour
         
         sceneObjects.push_back(plane);
@@ -187,7 +196,7 @@ glm::vec3 trace(Ray ray, int step)
         glutInitWindowSize(600, 600);
         glutInitWindowPosition(20, 20);
         glutCreateWindow("Raytracer");
-
+	
         glutDisplayFunc(display);
         initialize();
 
