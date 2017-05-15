@@ -42,7 +42,7 @@ TextureBMP worldTexture;
 glm::vec3 trace(Ray ray, int step)
 {
 	glm::vec3 background(0);
-    glm::vec3 ambientCol;
+    glm::vec3 ambientCol(0.2,0.2,0.2);
     glm::vec3 light(10, 40, -3);
     glm::vec3 colorSum;
 
@@ -106,7 +106,7 @@ glm::vec3 trace(Ray ray, int step)
 			s=s/(2*PI);
 			t=t/PI;
 			col=worldTexture.getColorAt(s,t);
-			cout<<diff.x<<" "<<diff.y<<" "<<diff.z<<" "<<s<<" "<<t<<"\n";
+			//cout<<diff.x<<" "<<diff.y<<" "<<diff.z<<" "<<s<<" "<<t<<"\n";
 			}else{
 
 		col = sceneObjects[ray.xindex]->getColor(); //else return object's colour
@@ -120,6 +120,7 @@ glm::vec3 trace(Ray ray, int step)
     if((shadow.xindex > -1 && shadow.xdist<lightDist)|| lDotn < 0)
     {
         colorSum = ambientCol * col;
+        //cout<<col.x<<" "<<col.y<<" "<<col.z;
         if(shadow.xindex==1){
 			colorSum=colorSum+sceneObjects[4]->getColor()*glm::vec3(0.15);
 		}
@@ -232,8 +233,8 @@ glm::vec3 anti_aliasing(int step, float pixelSize, float xp, float yp){
 
                 Ray ray = Ray(eye, dir);		//Create a ray originating from the camera in the direction 'dir'
                 ray.normalize();				//Normalize the direction of the ray to a unit vector
-                glm::vec3 col = trace (ray, 1); //Trace the primary ray and get the colour value
-				//glm::vec3 col = anti_aliasing(1,cellX,xp,yp);//anti aliasing
+                //glm::vec3 col = trace (ray, 1); //Trace the primary ray and get the colour value
+				glm::vec3 col = anti_aliasing(1,cellX,xp,yp);//anti aliasing
                 glColor3f(col.r, col.g, col.b);
                 glVertex2f(xp, yp);				//Draw each cell with its color value
                 glVertex2f(xp + cellX, yp);
