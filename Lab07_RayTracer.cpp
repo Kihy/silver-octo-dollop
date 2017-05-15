@@ -21,14 +21,14 @@ using namespace std;
 const float WIDTH = 20.0;
 const float HEIGHT = 20.0;
 const float EDIST = 40.0;
-const int NUMDIV = 2000;
+const int NUMDIV = 500;
 const int MAX_STEPS = 5;
 const float XMIN = -WIDTH * 0.5;
 const float XMAX =  WIDTH * 0.5;
 const float YMIN = -HEIGHT * 0.5;
 const float YMAX =  HEIGHT * 0.5;
 const float PHONGS_CONSTANT = 20;
-
+const float PI=3.14159265359;
 
 vector<SceneObject*> sceneObjects;  //A global list containing pointers to objects in the scene
 
@@ -96,8 +96,21 @@ glm::vec3 trace(Ray ray, int step)
 				}
 			}
 		else{
+		if(ray.xindex==7){
+			//texture earth of radius 6
+			glm::vec3 center(10,15,-90);
+			glm::vec3 diff=ray.xpt-center;
+			
+			float s=atan(diff.y/diff.x);
+			float t=atan(sqrt(diff.x*diff.x+diff.y*diff.y)/diff.z);
+			s=s/(2*PI);
+			t=t/PI;
+			col=worldTexture.getColorAt(s,t);
+			cout<<diff.x<<" "<<diff.y<<" "<<diff.z<<" "<<s<<" "<<t<<"\n";
+			}else{
 
 		col = sceneObjects[ray.xindex]->getColor(); //else return object's colour
+		}
 		}
 	}
 
@@ -328,9 +341,13 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
         
         sceneObjects.push_back(cone);
         
-		//--add earth
-		Sphere *earth=new Sphere(glm::vec3(-10,20,-100),5,glm::vec3(0,0,1));
-		sceneObjects.push_back(earth);
+		//--add pattern sphere
+		Sphere *sphere3=new Sphere(glm::vec3(-10,20,-100),5,glm::vec3(0,0,1));
+		sceneObjects.push_back(sphere3);
+		
+		//--add earth sphere
+		Sphere *earth=new Sphere(glm::vec3(10,15,-90),6,glm::vec3(0,0,0));
+        sceneObjects.push_back(earth);
         
         //--add box
         drawBox(-20,-20,-120,5,5,5,glm::vec3(1));

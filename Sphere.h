@@ -39,6 +39,7 @@ public:
 
 	glm::vec3 normal(glm::vec3 p);
 
+
 };
 
 #endif //!H_SPHERE
