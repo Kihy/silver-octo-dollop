@@ -15,12 +15,13 @@
 #include "Plane.h"
 #include "Cylinder.h"
 #include "TextureBMP.h"
+#include "Cone.h"
 using namespace std;
 
 const float WIDTH = 20.0;
 const float HEIGHT = 20.0;
 const float EDIST = 40.0;
-const int NUMDIV = 500;
+const int NUMDIV = 2000;
 const int MAX_STEPS = 5;
 const float XMIN = -WIDTH * 0.5;
 const float XMAX =  WIDTH * 0.5;
@@ -28,9 +29,11 @@ const float YMIN = -HEIGHT * 0.5;
 const float YMAX =  HEIGHT * 0.5;
 const float PHONGS_CONSTANT = 20;
 
+
 vector<SceneObject*> sceneObjects;  //A global list containing pointers to objects in the scene
 
 TextureBMP texture;
+TextureBMP worldTexture;
 
 //---The most important function in a ray tracer! ----------------------------------
 //   Computes the colour value obtained by tracing a ray and finding its
@@ -39,15 +42,14 @@ TextureBMP texture;
 glm::vec3 trace(Ray ray, int step)
 {
 	glm::vec3 background(0);
-    glm::vec3 ambientCol(0.2);
+    glm::vec3 ambientCol;
     glm::vec3 light(10, 40, -3);
     glm::vec3 colorSum;
 
     ray.closestPt(sceneObjects);		//Compute the closest point of intersetion of objects with the ray
 
     if(ray.xindex == -1) {
-		//float texcoords=(ray.xpt.x)/1024.0f;
-		//float texcoordt=(ray.xpt.y)/768.0f;
+
 		return background;
 		};      //If there is no intersection return background colour
 
@@ -55,7 +57,7 @@ glm::vec3 trace(Ray ray, int step)
     //shadows
     glm::vec3 normalVector = sceneObjects[ray.xindex]->normal(ray.xpt); //normal at point of intersection
     glm::vec3 lightVector = glm::normalize(light - ray.xpt); //normalized light vector
-
+	float lightDist=glm::distance(ray.xpt,light);
     //shadow ray
     Ray shadow(ray.xpt, lightVector);
     shadow.closestPt(sceneObjects);
@@ -65,49 +67,128 @@ glm::vec3 trace(Ray ray, int step)
 
     glm::vec3 col;
 
-	if(ray.xindex==3){
-		
-		float texcoords=(ray.xpt.x+50)/100;
-		float texcoordt=(ray.xpt.y+50)/100;
-		
-		col=texture.getColorAt(texcoords,texcoordt);
-		}
-	else{
-		col = sceneObjects[ray.xindex]->getColor(); //else return object's colour
-		}
-
     //specular reflections
     glm::vec3 reflVector = glm::reflect(-lightVector, normalVector);
     float rDotv = glm::dot(reflVector, -ray.dir);
 
     //make rDotn at least 0
     rDotv = max(rDotv, 0.0f);
+    
+    //texture
+	if(ray.xindex==3){
+		float texcoords=(ray.xpt.x+50)/100;
+		float texcoordt=(ray.xpt.y+50)/100;
+		//disable specular on background
+		rDotv=0;
+
+		col=texture.getColorAt(texcoords,texcoordt);
+		}
+	
+	else{
+		if(ray.xindex==6){
+			//texture sphere
+			if ((int(ray.xpt.x) % 2 == 0) !=( int(ray.xpt.y)%2==1))
+			 {
+				 col = glm::vec3(0.2,0.2,0.2);
+				 }
+			else {
+				col = glm::vec3(1,1,1);
+				}
+			}
+		else{
+
+		col = sceneObjects[ray.xindex]->getColor(); //else return object's colour
+		}
+	}
 
     glm::vec3 v1(1);
     rDotv = pow(rDotv, PHONGS_CONSTANT);
 
-    if(shadow.xindex > -1 || lDotn < 0)
+    if((shadow.xindex > -1 && shadow.xdist<lightDist)|| lDotn < 0)
     {
         colorSum = ambientCol * col;
+        if(shadow.xindex==1){
+			colorSum=colorSum+sceneObjects[4]->getColor()*glm::vec3(0.15);
+		}
     }
     else
     {
         colorSum = ambientCol * col + lDotn * col + rDotv * v1;
     }
 
-    if(ray.xindex == 0 && step < MAX_STEPS)
+//reflection
+    if((ray.xindex == 0) && step < MAX_STEPS)
     {
         glm::vec3 reflectedDir = glm::reflect(ray.dir, normalVector);
         Ray reflectedRay(ray.xpt, reflectedDir);
         glm::vec3 reflectedCol = trace(reflectedRay, step + 1); //Recursion!
         colorSum = colorSum + (0.8f*reflectedCol);  
     }
+//refraction
+	if(ray.xindex==1 && step < MAX_STEPS){
 
+		glm::vec3 g=glm::refract(ray.dir,normalVector,1.0f/1.01f);
+		Ray refractedRay(ray.xpt, g);
+		
+		refractedRay.closestPt(sceneObjects);
+		
+		if(refractedRay.xindex==-1){
+			return background;
+		}
+		glm::vec3 m=sceneObjects[refractedRay.xindex]->normal(refractedRay.xpt);
+		glm::vec3 h=glm::refract(g,-m,1.01f);
+		Ray refractedRay2(refractedRay.xpt,h);
+		refractedRay2.closestPt(sceneObjects);
+		if(refractedRay2.xindex==-1){
+			return background;
+		}
+		return trace(refractedRay2,step++);
+	}
 
         //return ambientCol * col + lDotn * col + rDotn * v1;
         return colorSum;
 
     }
+    
+    //--Anti-aliasing
+glm::vec3 anti_aliasing(int step, float pixelSize, float xp, float yp){
+	float center1=pixelSize/4.0f;
+	float center2=center1+pixelSize/2.0f;
+	glm::vec3 eye(0);
+	float xc1=xp+center1;
+	float yc1=yp+center1;
+	
+	float xc2=xp+center1;
+	float yc2=yp+center2;
+	
+	float xc3=xp+center2;
+	float yc3=yp+center1;
+	
+	float xc4=xp+center2;
+	float yc4=yp+center2;
+	
+	glm::vec3 colorSum(0);
+	
+	
+    Ray ray = Ray(eye, glm::vec3(xc1,yc1,-EDIST));		
+    ray.normalize();				
+	colorSum+=trace(ray,1);
+	
+	 ray = Ray(eye, glm::vec3(xc2,yc2,-EDIST));		
+    ray.normalize();				
+	colorSum+=trace(ray,1);
+	
+	 ray = Ray(eye, glm::vec3(xc3,yc3,-EDIST));		
+    ray.normalize();				
+	colorSum+=trace(ray,1);
+	
+	 ray = Ray(eye, glm::vec3(xc4,yc4,-EDIST));		
+    ray.normalize();				
+	colorSum+=trace(ray,1);
+	
+	return colorSum*glm::vec3(0.25);
+	
+	}
 
 //---The main display module -----------------------------------------------------------
 // In a ray tracing application, it just displays the ray traced image by drawing
@@ -139,7 +220,7 @@ glm::vec3 trace(Ray ray, int step)
                 Ray ray = Ray(eye, dir);		//Create a ray originating from the camera in the direction 'dir'
                 ray.normalize();				//Normalize the direction of the ray to a unit vector
                 glm::vec3 col = trace (ray, 1); //Trace the primary ray and get the colour value
-
+				//glm::vec3 col = anti_aliasing(1,cellX,xp,yp);//anti aliasing
                 glColor3f(col.r, col.g, col.b);
                 glVertex2f(xp, yp);				//Draw each cell with its color value
                 glVertex2f(xp + cellX, yp);
@@ -201,6 +282,7 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
 
 		//--create texture
 		texture=TextureBMP("background.bmp");
+		worldTexture=TextureBMP("worldMap.bmp");
 
         //-- Create a pointer to a sphere object
         Sphere *sphere1 = new Sphere(glm::vec3(-0.0, -0.0, -100.0), 5.0, glm::vec3(0, 0, 1));
@@ -209,7 +291,7 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
         sceneObjects.push_back(sphere1);
 
         //-- Create a pointer to a sphere object
-        Sphere *sphere2 = new Sphere(glm::vec3(3.0, 4.0, -70.0), 3.0, glm::vec3(1, 0, 0));
+        Sphere *sphere2 = new Sphere(glm::vec3(8.0, 0.0, -100.0), 3.0, glm::vec3(1, 0, 0));
 
         //--Add the above to the list of scene objects.
         sceneObjects.push_back(sphere2);
@@ -220,7 +302,6 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
         //--Add the above to the list of scene objects.
         sceneObjects.push_back(cylinder);
         
-
         
         //--Add background plane xindex=3
 		Plane *backplane = new Plane(glm::vec3(-50., -50, -200),//Point A
@@ -236,11 +317,26 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
         glm::vec3(50., -20, -40),//Point B
         glm::vec3(50., -20, -180),//Point C
         glm::vec3(-50., -20, -180),//Point D
-        glm::vec3(1));//Colour
+        glm::vec3(214/255.0f,197/255.0f,70/255.0f));//Colour
         
         sceneObjects.push_back(floor);
         
+        
+        //--Add cone
+        Cone *cone = new Cone(glm::vec3(0., -20, -90),2.5,5,
+        glm::vec3());//Colour
+        
+        sceneObjects.push_back(cone);
+        
+		//--add earth
+		Sphere *earth=new Sphere(glm::vec3(-10,20,-100),5,glm::vec3(0,0,1));
+		sceneObjects.push_back(earth);
+        
+        //--add box
         drawBox(-20,-20,-120,5,5,5,glm::vec3(1));
+        
+        
+
 
     }
 
