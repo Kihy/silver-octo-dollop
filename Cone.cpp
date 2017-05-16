@@ -43,16 +43,15 @@ float Cone::intersect(glm::vec3 posn, glm::vec3 dir)
 
 /**
 * Returns the unit normal vector at a given point.
-* Assumption: The input point p lies on the cylinder.
+* Assumption: The input point p lies on the cone.
 */
 glm::vec3 Cone::normal(glm::vec3 p)
 {
     
     glm::vec3 diff=p-center;
-    float alpha=atan(diff.x/diff.z);
-    float theta=atan(radius/height);
+	float r=sqrt(diff.x*diff.x+diff.z*diff.z);
     
-    glm::vec3 n(sin(alpha)*cos(theta),sin(theta),cos(alpha)*cos(theta));
+    glm::vec3 n(diff.x,r*radius/height,diff.z);
     n=glm::normalize(n);
     return n;
 }

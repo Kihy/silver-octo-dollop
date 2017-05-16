@@ -98,13 +98,14 @@ glm::vec3 trace(Ray ray, int step)
 		else{
 		if(ray.xindex==7){
 			//texture earth of radius 6
-			glm::vec3 center(10,15,-90);
+			glm::vec3 center(10,10,-90);
 			glm::vec3 diff=ray.xpt-center;
 			
-			float s=atan(diff.y/diff.x);
-			float t=atan(sqrt(diff.x*diff.x+diff.y*diff.y)/diff.z);
-			s=s/(2*PI);
-			t=t/PI;
+			float s=atan2(diff.z,diff.x);
+			float t=(diff.y+6)/12;
+			
+			s=(s+PI)/(2*PI);
+			
 			col=worldTexture.getColorAt(s,t);
 			//cout<<diff.x<<" "<<diff.y<<" "<<diff.z<<" "<<s<<" "<<t<<"\n";
 			}else{
@@ -122,7 +123,7 @@ glm::vec3 trace(Ray ray, int step)
         colorSum = ambientCol * col;
         //cout<<col.x<<" "<<col.y<<" "<<col.z;
         if(shadow.xindex==1){
-			colorSum=colorSum+sceneObjects[4]->getColor()*glm::vec3(0.15);
+			colorSum=col*glm::vec3(0.3)+glm::vec3(0.1)*sceneObjects[1]->getColor();
 		}
     }
     else
@@ -141,7 +142,7 @@ glm::vec3 trace(Ray ray, int step)
 //refraction
 	if(ray.xindex==1 && step < MAX_STEPS){
 
-		glm::vec3 g=glm::refract(ray.dir,normalVector,1.0f/1.01f);
+		glm::vec3 g=glm::refract(ray.dir,normalVector,1.0f/1.03f);
 		Ray refractedRay(ray.xpt, g);
 		
 		refractedRay.closestPt(sceneObjects);
@@ -150,13 +151,14 @@ glm::vec3 trace(Ray ray, int step)
 			return background;
 		}
 		glm::vec3 m=sceneObjects[refractedRay.xindex]->normal(refractedRay.xpt);
-		glm::vec3 h=glm::refract(g,-m,1.01f);
+		glm::vec3 h=glm::refract(g,-m,1.03f);
 		Ray refractedRay2(refractedRay.xpt,h);
 		refractedRay2.closestPt(sceneObjects);
 		if(refractedRay2.xindex==-1){
 			return background;
 		}
-		return trace(refractedRay2,step++);
+		glm::vec3 refractedCol = trace(refractedRay2, step + 1); //Recursion!
+        colorSum = glm::vec3(0.2)*colorSum + refractedCol; 
 	}
 
         //return ambientCol * col + lDotn * col + rDotn * v1;
@@ -298,20 +300,20 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
 		texture=TextureBMP("background.bmp");
 		worldTexture=TextureBMP("worldMap.bmp");
 
-        //-- Create a pointer to a sphere object
-        Sphere *sphere1 = new Sphere(glm::vec3(-0.0, -0.0, -100.0), 5.0, glm::vec3(0, 0, 1));
+        //-- Create a pointer to a sphere object reflective
+        Sphere *sphere1 = new Sphere(glm::vec3(-5.0, -0.0, -100.0), 5.0, glm::vec3(0, 0, 1));
 
         //--Add the above to the list of scene objects.
         sceneObjects.push_back(sphere1);
 
-        //-- Create a pointer to a sphere object
-        Sphere *sphere2 = new Sphere(glm::vec3(8.0, 0.0, -100.0), 3.0, glm::vec3(1, 0, 0));
+        //-- Create a pointer to a sphere object refractive
+        Sphere *sphere2 = new Sphere(glm::vec3(12.0, -10.0, -100.0), 5.0, glm::vec3(1, 0, 0));
 
         //--Add the above to the list of scene objects.
         sceneObjects.push_back(sphere2);
 
         //-- Create a pointer to a sphere object
-        Cylinder *cylinder = new Cylinder(glm::vec3(10, -20, -90.0), 5.0,10.0, glm::vec3(0, 1, 0));
+        Cylinder *cylinder = new Cylinder(glm::vec3(0, -20, -90.0), 5.0,10.0, glm::vec3(0.987, 0.654, 0.321));
 
         //--Add the above to the list of scene objects.
         sceneObjects.push_back(cylinder);
@@ -331,23 +333,23 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
         glm::vec3(50., -20, -40),//Point B
         glm::vec3(50., -20, -180),//Point C
         glm::vec3(-50., -20, -180),//Point D
-        glm::vec3(214/255.0f,197/255.0f,70/255.0f));//Colour
+        glm::vec3(1));//Colour
         
         sceneObjects.push_back(floor);
         
         
         //--Add cone
-        Cone *cone = new Cone(glm::vec3(0., -20, -90),2.5,5,
-        glm::vec3());//Colour
+        Cone *cone = new Cone(glm::vec3(-0., 20, -150),5,10,
+        glm::vec3(0.123,0.456,0.789));//Colour
         
         sceneObjects.push_back(cone);
         
 		//--add pattern sphere
-		Sphere *sphere3=new Sphere(glm::vec3(-10,20,-100),5,glm::vec3(0,0,1));
+		Sphere *sphere3=new Sphere(glm::vec3(-10,15,-100),5,glm::vec3(0,0,1));
 		sceneObjects.push_back(sphere3);
 		
 		//--add earth sphere
-		Sphere *earth=new Sphere(glm::vec3(10,15,-90),6,glm::vec3(0,0,0));
+		Sphere *earth=new Sphere(glm::vec3(10,10,-90),6,glm::vec3(0,0,0));
         sceneObjects.push_back(earth);
         
         //--add box
