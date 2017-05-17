@@ -16,6 +16,8 @@
 #include "Cylinder.h"
 #include "TextureBMP.h"
 #include "Cone.h"
+
+
 using namespace std;
 
 const float WIDTH = 20.0;
@@ -123,7 +125,7 @@ glm::vec3 trace(Ray ray, int step)
         colorSum = ambientCol * col;
         //cout<<col.x<<" "<<col.y<<" "<<col.z;
         if(shadow.xindex==1){
-			colorSum=col*glm::vec3(0.3)+glm::vec3(0.1)*sceneObjects[1]->getColor();
+			colorSum=col*glm::vec3(0.4)+sceneObjects[1]->getColor()*glm::vec3(0.05);
 		}
     }
     else
@@ -157,8 +159,8 @@ glm::vec3 trace(Ray ray, int step)
 		if(refractedRay2.xindex==-1){
 			return background;
 		}
-		glm::vec3 refractedCol = trace(refractedRay2, step + 1); //Recursion!
-        colorSum = glm::vec3(0.2)*colorSum + refractedCol; 
+		return colorSum*glm::vec3(0.05)+trace(refractedRay2, step + 1); //Recursion!
+        
 	}
 
         //return ambientCol * col + lDotn * col + rDotn * v1;
@@ -355,6 +357,9 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
         //--add box
         drawBox(-20,-20,-120,5,5,5,glm::vec3(1));
         
+        //--add earth sphere
+		Disc *disc=new Disc(glm::vec3(0, 0, -90.0), 5.0,glm::vec3(1,1,1));
+        sceneObjects.push_back(disc);
         
 
 
