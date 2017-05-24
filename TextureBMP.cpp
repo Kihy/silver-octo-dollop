@@ -20,6 +20,7 @@ TextureBMP::TextureBMP(char* filename)
     }
 }
 
+
 /**
  * Return color at texture coord (s, t) where s and t are in [0,1]
  */

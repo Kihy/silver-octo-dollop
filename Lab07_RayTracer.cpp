@@ -149,16 +149,16 @@ glm::vec3 trace(Ray ray, int step)
 		
 		refractedRay.closestPt(sceneObjects);
 		
-		if(refractedRay.xindex==-1){
-			return background;
-		}
+		//~ if(refractedRay.xindex==-1){
+			//~ return background;
+		//~ }
 		glm::vec3 m=sceneObjects[refractedRay.xindex]->normal(refractedRay.xpt);
 		glm::vec3 h=glm::refract(g,-m,1.03f);
 		Ray refractedRay2(refractedRay.xpt,h);
 		refractedRay2.closestPt(sceneObjects);
-		if(refractedRay2.xindex==-1){
-			return background;
-		}
+		//~ if(refractedRay2.xindex==-1){
+			//~ return background;
+		//~ }
 		return colorSum*glm::vec3(0.05)+trace(refractedRay2, step + 1); //Recursion!
         
 	}
@@ -237,8 +237,8 @@ glm::vec3 anti_aliasing(int step, float pixelSize, float xp, float yp){
 
                 Ray ray = Ray(eye, dir);		//Create a ray originating from the camera in the direction 'dir'
                 ray.normalize();				//Normalize the direction of the ray to a unit vector
-                //glm::vec3 col = trace (ray, 1); //Trace the primary ray and get the colour value
-				glm::vec3 col = anti_aliasing(1,cellX,xp,yp);//anti aliasing
+                glm::vec3 col = trace (ray, 1); //Trace the primary ray and get the colour value
+				//glm::vec3 col = anti_aliasing(1,cellX,xp,yp);//anti aliasing
                 glColor3f(col.r, col.g, col.b);
                 glVertex2f(xp, yp);				//Draw each cell with its color value
                 glVertex2f(xp + cellX, yp);
@@ -259,10 +259,10 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
 	    glm::vec3 C(x+w,y,z);
 	    glm::vec3 D(x+w,y+h,z);
 	    
-	    glm::vec3 E(x,y+h,z+d);
-	    glm::vec3 F(x,y,z+d);
-	    glm::vec3 G(x+w,y,z+d);
-	    glm::vec3 H(x+w,y+h,z+d);
+	    glm::vec3 E(x,y+h,z-d);
+	    glm::vec3 F(x,y,z-d);
+	    glm::vec3 G(x+w,y,z-d);
+	    glm::vec3 H(x+w,y+h,z-d);
 	    
 		Plane *front = new Plane(A,B,C,D,color);
         sceneObjects.push_back(front);
@@ -273,10 +273,10 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
         Plane *back = new Plane(F,G,H,E,color);
         sceneObjects.push_back(back);
         
-        Plane *right = new Plane(D,H,G,C,color);
+        Plane *right = new Plane(C,G,H,D,color);
         sceneObjects.push_back(right);
         
-        Plane *top = new Plane(E,H,D,A,color);
+        Plane *top = new Plane(A,D,H,E,color);
         sceneObjects.push_back(top);
         
         Plane *bottom = new Plane(B,C,G,F,color);
@@ -299,8 +299,8 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
         glClearColor(0, 0, 0, 1);
 
 		//--create texture
-		texture=TextureBMP("background.bmp");
-		worldTexture=TextureBMP("worldMap.bmp");
+		texture=TextureBMP("canvas-background.bmp");
+		worldTexture=TextureBMP("Earth.bmp");
 
         //-- Create a pointer to a sphere object reflective
         Sphere *sphere1 = new Sphere(glm::vec3(-5.0, -0.0, -100.0), 5.0, glm::vec3(0, 0, 1));
@@ -358,11 +358,9 @@ void drawBox(float x,float y,float z,float w,float h,float d,glm::vec3 color){
         drawBox(-20,-20,-120,5,5,5,glm::vec3(1));
         
         //--add earth sphere
-		Disc *disc=new Disc(glm::vec3(0, 0, -90.0), 5.0,glm::vec3(1,1,1));
-        sceneObjects.push_back(disc);
+		//Disc *disc=new Disc(glm::vec3(0, 0, -90.0), 5.0,glm::vec3(1,1,1));
+        //sceneObjects.push_back(disc);
         
-
-
     }
 
 
